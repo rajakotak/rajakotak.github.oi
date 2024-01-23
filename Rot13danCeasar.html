@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ROT13, CAESAR dan VIGENERE</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        video {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        .container {
+            text-align: center;
+            width: 100%;
+            height: 100vh;
+        }
+        #encryptionMethod {
+            border-radius: 50px;
+            padding: 10px 20px;
+            margin-right: 10px;
+        }
+        #inputText, #outputText {
+            width: 50%;
+            height: 200px;
+            padding: 30px;
+            font-size: 18px;
+            margin-bottom: 10px;
+            border-radius: 50px;
+            border-style: groove;
+        }
+        #outputText {
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            border-radius: 50px;
+        }
+        #encryptButton, #decryptButton, #hideButton, #revealButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin-right: 10px;
+            border-radius: 50px;
+        }
+        .input2 {
+            padding: 10px;
+            width: 50%;
+        }
+        #fileInput {
+            display: none;
+        }
+        #uploadButton, #downloadButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin-right: 10px;
+            border-radius: 50px;
+        }
+    </style>
+</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.0.1/mammoth.browser.min.js"></script>
+
+<!-- Tambahkan ini untuk memuat pustaka mammoth.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.0.1/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.86/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.86/vfs_fonts.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/0.9.0rc1/jspdf.min.js"></script>
+<!-- Tambahkan ini di bagian head atau sebelum script Anda -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.10.3/docxtemplater.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
+
+
+
+<body>
+    <video autoplay loop muted>
+        <source src="vidio1.mp4" type="video/mp4">
+        Browser Anda tidak mendukung tag video.
+    </video>
+   
+
+    <div class="container">
+        <div class="input1">
+            <h1>ROT13, CAESAR dan VIGENERE</h1>
+            <style>
+                h1 {
+                  color: #ffffff; /* Putih */
+                }
+              </style>
+            <textarea id="inputText" rows="4" placeholder="Masukkan teks di sini"></textarea>
+        </div>
+        <div>
+            <input class="input2" placeholder="Masukkan key  Vigenere" id="VEGENERE"></input>
+        </div>
+        <br>
+        <!-- Tambahkan elemen select -->
+        <select id="encryptionMethod">
+            <option value="rot13">ROT13</option>
+            <option value="caesar">CAESAR</option>
+            <option value="vigenere">VIGENERE</option>
+        </select>
+
+        <!-- Tambahkan elemen select untuk shift value (K1 - K26) -->
+        <select id="caesarShift">
+            <option value="1">K1</option>
+            <option value="2">K2</option>
+            <option value="3">K3</option>
+            <option value="4">K4</option>
+            <option value="5">K5</option>
+            <option value="6">K6</option>
+            <option value="7">K7</option>
+            <option value="8">K8</option>
+            <option value="9">K9</option>
+            <option value="10">K10</option>
+            <option value="11">K11</option>
+            <option value="12">K12</option>
+            <option value="13">K13</option>
+            <option value="14">K14</option>
+            <option value="15">K15</option>
+            <option value="16">K16</option>
+            <option value="17">K17</option>
+            <option value="18">K18</option>
+            <option value="19">K19</option>
+            <option value="20">K20</option>
+            <option value="21">K21</option>
+            <option value="22">K22</option>
+            <option value="23">K23</option>
+            <option value="24">K24</option>
+            <option value="25">K25</option>
+            <option value="26">K26</option>
+        </select>
+
+        <button id="encryptButton" onclick="encryptText()">Enkripsi</button>
+        <button id="decryptButton" onclick="decryptText()">Dekripsi</button>
+        <button id="uploadButton" onclick="uploadText()">Upload</button>
+        <button id="downloadButton" onclick="downloadText()">Download</button>
+        <button id="downloadButton" onclick="downloadpdfText()">Download pdf</button>
+       
+
+        <button id="downloadButton" onclick="downloaddocxText()">Download docx</button>
+        <textarea id="outputText" rows="4" readonly></textarea>
+        <input type="file" id="fileInput" onchange="loadFile()">
+    </div>
+    <script>
+        function caesarCipher(input, shift) {
+            return input
+                .split('')
+                .map(char => {
+                    if (char.match(/[a-z]/i)) {
+                        const code = char.charCodeAt();
+                        let shiftAmount = 65;
+                        if (char.match(/[a-z]/)) {
+                            shiftAmount = 97;
+                        }
+                        return String.fromCharCode(((code - shiftAmount + shift + 26) % 26) + shiftAmount);
+                    } else {
+                        return char;
+                    }
+                })
+                .join('');
+        }
+
+        function rot13(input) {
+            var result = '';
+            for (var i = 0; i < input.length; i++) {
+                var char = input[i];
+                var charCode = input.charCodeAt(i);
+                if (charCode >= 65 && charCode <= 90) { // Huruf besar
+                    result += String.fromCharCode(((charCode - 65 + 13) % 26) + 65);
+                } else if (charCode >= 97 && charCode <= 122) { // Huruf kecil
+                    result += String.fromCharCode(((charCode - 97 + 13) % 26) + 97);
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        function vigenereCipher(input, key) {
+            // Mengubah input dan key menjadi huruf kecil untuk konsistensi
+            input = input.toLowerCase();
+            key = key.toLowerCase();
+
+            let result = '';
+            let keyIndex = 0;
+
+            for (let i = 0; i < input.length; i++) {
+                const char = input[i];
+
+                if (char.match(/[a-z]/)) {
+                    // Ambil karakter kunci yang sesuai
+                    const keyChar = key[keyIndex % key.length];
+
+                    // Enkripsi karakter pesan menggunakan rumus Vigenere Cipher
+                    const encryptedChar = String.fromCharCode(((char.charCodeAt() - 97 + (keyChar.charCodeAt() - 97) + 26) % 26) + 97);
+
+                    // Tambahkan karakter terenkripsi ke hasil
+                    result += encryptedChar;
+
+                    // Pindah ke karakter kunci berikutnya
+                    keyIndex++;
+                } else {
+                    // Tambahkan karakter non-abjad langsung ke hasil tanpa enkripsi
+                    result += char;
+                }
+            }
+
+            return result;
+        }
+
+        function hideText() {
+            var inputText = document.getElementById("inputText").value;
+            var vigenereKey = document.getElementById("VEGENERE").value;
+            var result = vigenereCipher(inputText, vigenereKey);
+            document.getElementById("outputText").value = result;
+        }
+
+        function revealText() {
+            var inputText = document.getElementById("inputText").value;
+            var vigenereKey = document.getElementById("VEGENERE").value;
+            var result = vigenereCipher(inputText, inverseVigenereKey(vigenereKey));
+            document.getElementById("outputText").value = result;
+        }
+
+        function encryptText() {
+            var inputText = document.getElementById("inputText").value;
+            var outputText = document.getElementById("outputText");
+            var result = "";
+
+            var selectedMethod = document.getElementById("encryptionMethod").value;
+
+            if (selectedMethod === "rot13") {
+                result = rot13(inputText);
+            } else if (selectedMethod === "caesar") {
+                var shiftValue = parseInt(document.getElementById("caesarShift").value);
+                result = caesarCipher(inputText, shiftValue);
+            } else if (selectedMethod === "vigenere") {
+                var vigenereKey = document.getElementById("VEGENERE").value;
+                result = vigenereCipher(inputText, vigenereKey);
+            }
+
+            outputText.value = result;
+        }
+
+        function decryptText() {
+            var inputText = document.getElementById("inputText").value;
+            var outputText = document.getElementById("outputText");
+            var result = "";
+
+            var selectedMethod = document.getElementById("encryptionMethod").value;
+
+            if (selectedMethod === "rot13") {
+                result = rot13(inputText);
+            } else if (selectedMethod === "caesar") {
+                var shiftValue = parseInt(document.getElementById("caesarShift").value);
+                result = caesarCipher(inputText, -shiftValue);
+            } else if (selectedMethod === "vigenere") {
+                var vigenereKey = document.getElementById("VEGENERE").value;
+                result = vigenereCipher(inputText, inverseVigenereKey(vigenereKey));
+            }
+
+            outputText.value = result;
+        }
+
+        function inverseVigenereKey(key) {
+            // Mendapatkan kunci invers dari Vigenere
+            return key.split('').map(char => String.fromCharCode(((26 - (char.toUpperCase().charCodeAt() - 65)) % 26) + 65)).join('');
+        }
+
+        function uploadText() {
+            document.getElementById("fileInput").click();
+        }
+
+        function loadFile() {
+    var fileInput = document.getElementById('fileInput');
+    var file = fileInput.files[0];
+    var fileType = getFileExtension(file.name);
+
+    switch (fileType) {
+        case 'txt':
+            // Handle text file
+            readTextFile(file);
+            break;
+        case 'pdf':
+            // Handle PDF file
+            readPdfFile(file);
+            break;
+        case 'docx':
+            // Handle DOCX file using mammoth.js (as mentioned before)
+            convertDocxToText(file);
+            break;
+        case 'csv':
+            // Handle CSV file
+            readCsvFile(file);
+            break;
+        default:
+            alert('Unsupported file type: ' + fileType);
+    }
+}
+
+function getFileExtension(filename) {
+    return filename.split('.').pop().toLowerCase();
+}
+
+function readTextFile(file) {
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+        document.getElementById('inputText').value = e.target.result;
+    };
+
+    reader.readAsText(file);
+}
+
+function readPdfFile(file) {
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+        var typedarray = new Uint8Array(e.target.result);
+        pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+            var promises = [];
+
+            for (var pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                promises.push(
+                    pdf.getPage(pageNum).then(function(page) {
+                        return page.getTextContent().then(function(textContent) {
+                            return textContent.items.map(function(item) {
+                                return item.str;
+                            }).join(' ');
+                        });
+                    })
+                );
+            }
+
+            Promise.all(promises).then(function(pageTexts) {
+                document.getElementById('inputText').value = pageTexts.join('\n');
+            });
+        });
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+function convertDocxToText(file) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            mammoth.extractRawText({ arrayBuffer: e.target.result })
+                .then(displayResult)
+                .catch(handleError);
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+function readCsvFile(file) {
+    Papa.parse(file, {
+        complete: function(results) {
+            var text = results.data.map(function(row) {
+                return row.join(',');
+            }).join('\n');
+            document.getElementById('inputText').value = text;
+        }
+    });
+}
+
+
+        function downloadText() {
+            var outputText = document.getElementById('outputText').value;
+            var blob = new Blob([outputText], { type: 'text/plain' });
+            var anchor = document.createElement('a');
+            anchor.download = 'output.txt';
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.target = '_blank';
+            anchor.style.display = 'none';
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+        }
+
+        function displayResult(result) {
+        document.getElementById('inputText').value = result.value;
+    }
+
+    function handleError(err) {
+        console.log('Error converting DOCX to text:', err);
+        alert('Error converting DOCX to text. Please try again.');
+    }
+    function downloadpdfText() {
+    var inputText = document.getElementById('outputText').value;
+    var pdf = new jsPDF('p', 'pt', 'letter');
+
+    // Set margin dan lebar halaman
+    var margin = 10;
+    var pageHeight = pdf.internal.pageSize.height;
+    var pageWidth = pdf.internal.pageSize.width - 2 * margin;
+
+    // Split teks menjadi baris-baris
+    var textLines = pdf.splitTextToSize(inputText, pageWidth);
+
+    // Set posisi awal
+    var y = margin;
+
+    // Loop melalui setiap baris teks dan tambahkan ke halaman PDF
+    for (var i = 0; i < textLines.length; i++) {
+        // Tambahkan halaman baru jika melebihi batas halaman
+        if (y > pageHeight - margin) {
+            pdf.addPage();
+            y = margin; // Reset posisi untuk halaman baru
+        }
+
+        // Tambahkan teks ke halaman PDF
+        pdf.text(textLines[i], margin, y);
+        
+        // Naikkan posisi vertikal
+        y += 15; // Sesuaikan sesuai kebutuhan, ini adalah jarak antar baris
+    }
+
+    // Simpan PDF ke file
+    pdf.save('output.pdf');
+}
+
+
+function downloaddocxText() {
+ var text = document.getElementById('outputText').value;
+ var header = "<html xmlns: o='urn: schemas-microsoft-com:office: office' "+ 
+ "xmlns:w='urn: schemas-microsoft-com:office:word'"+
+"xmlns='http://www.w3.org/TR/REC-htm140'>"+
+"<head><meta charset='utf-8'><title>Export HTML to Word Document with JavaScript</title></head><body>";
+var footer = "</body></html>";
+var sourceHTML = header+text+footer;
+
+var source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(
+sourceHTML);
+var fileDownload = document.createElement("a");
+document.body.appendChild(fileDownload);
+fileDownload.href = source;
+fileDownload.download = 'dccument.doc';
+fileDownload.click();
+document.body.removeChild(fileDownload);   
+    
+}
+
+
+
+
+    </script>
+</body>
+</html>
